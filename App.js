@@ -1,10 +1,14 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-
+import { StatusBar } from "expo-status-bar";
+import { StyleSheet, View } from "react-native";
+import SinglePlayerMode from "./src/SinglePlayerMode";
+import { createBoard, createBoardItems } from "./src/helpers/boardItems";
 export default function App() {
+  let board = createBoard();
+  let boardItems = createBoardItems();
+
   return (
     <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
+      <SinglePlayerMode board={board} boardItems={boardItems} />
       <StatusBar style="auto" />
     </View>
   );
@@ -13,8 +17,8 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
