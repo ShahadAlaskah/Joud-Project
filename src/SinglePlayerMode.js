@@ -8,27 +8,12 @@ import {
   Den,
 } from "./helpers/boardItems";
 import { db } from "../firebase/fierbase-config";
+import { collection, getDocs, doc, setDoc } from "firebase/firestore";
 import Item from "./component/Item";
 import QuestionModal from "./component/QuestionModal";
+
 const windowWidth = Dimensions.get("window").width;
 const windowHeight = Dimensions.get("window").height;
-
-const questionList = [
-  {
-    question:
-      "أي مما يلي يُعد من العوامل المساعدة في الحصول على الاعتمادات للجامعة؟ ",
-    type: "إختيار من متعدد",
-    point: 5,
-    choices: [
-      "جميع ما سبق ",
-      "برامج تعليمية مواكبة لسوق العمل ",
-      "كفاءة أعضاء هيئة التدريس ",
-      "جودة المخرجات التعليمية ",
-    ],
-    level: 2,
-    correctAnswer: 3,
-  },
-];
 
 const SinglePlayerMode = ({ board, boardItems }) => {
   const [selectedId, setSelectedId] = useState(null);
@@ -36,12 +21,39 @@ const SinglePlayerMode = ({ board, boardItems }) => {
   const [questionModalVisible, setQuestionModalVisible] = useState(false);
   const [selectedChoices, setSelectedChoices] = useState(null);
   const [numberOfTape, setNumberOfTape] = useState(3);
+  const [question, setQuestion] = useState({
+    question: "",
+    type: "",
+    point: 0,
+    choices: ["", ""],
+    level: 0,
+    correctAnswer: null,
+  });
   const [endGameState, setEndGameState] = useState({
     isEnd: false,
     type: null,
   });
 
-  const displayQuestion = (selectedRoomNumber) => {
+  const getQuestion = async () => {
+    const QuestionCol = collection(db, "question1");
+    const QuestionSnapshot = await getDocs(QuestionCol);
+    const QuestionList = QuestionSnapshot.docs.map((doc) => doc.data());
+    let qac = QuestionList[Math.floor(Math.random() * QuestionList.length)];
+
+    return {
+      question: qac.q[4],
+      type: qac.q[5],
+      point: 5,
+      choices: qac.q[1].Choices,
+      level: 2,
+      correctAnswer: qac.q[0],
+    };
+  };
+
+  const displayQuestion = async (selectedRoomNumber) => {
+    //Get random question from database
+    let randomQuestion = await getQuestion();
+    setQuestion(randomQuestion);
     //Set selected room number
     setSelectedId(selectedRoomNumber);
     if (adjacentRoom(currentRoomNumber, selectedRoomNumber)) {
@@ -81,8 +93,9 @@ const SinglePlayerMode = ({ board, boardItems }) => {
         break;
     }
   };
+
   const move = () => {
-    if (selectedChoices === questionList[0].correctAnswer) {
+    if (selectedChoices === question.correctAnswer) {
       //Move JOUD to the next room
       setCurrentRoomNumber(selectedId);
       //Open room
@@ -152,7 +165,7 @@ const SinglePlayerMode = ({ board, boardItems }) => {
         <QuestionModal
           questionModalVisible={questionModalVisible}
           setQuestionModalVisible={setQuestionModalVisible}
-          question={questionList[0]}
+          question={question}
           selectedChoices={selectedChoices}
           setSelectedChoices={setSelectedChoices}
         />

@@ -9,6 +9,7 @@ const QuestionModal = ({
   selectedChoices,
   setSelectedChoices,
 }) => {
+  console.log(question);
   const renderChoices = (choiceTitle, choiceIndex) => {
     let backgroundColor;
     let color;
