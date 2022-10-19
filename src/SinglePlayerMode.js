@@ -1,13 +1,12 @@
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  FlatList,
-  Dimensions,
-  View,
-} from "react-native";
+import { StyleSheet, Text, FlatList, Dimensions, View } from "react-native";
 import React, { useEffect, useState } from "react";
-import { adjacentRoom } from "./helpers/boardItems";
+import {
+  adjacentRoom,
+  Tape,
+  Pessimist,
+  Foggy,
+  Den,
+} from "./helpers/boardItems";
 import { db } from "../firebase/fierbase-config";
 import Item from "./component/Item";
 import QuestionModal from "./component/QuestionModal";
@@ -37,6 +36,10 @@ const SinglePlayerMode = ({ board, boardItems }) => {
   const [questionModalVisible, setQuestionModalVisible] = useState(false);
   const [selectedChoices, setSelectedChoices] = useState(null);
   const [numberOfTape, setNumberOfTape] = useState(3);
+  const [endGameState, setEndGameState] = useState({
+    isEnd: false,
+    type: null,
+  });
 
   const displayQuestion = (selectedRoomNumber) => {
     //Set selected room number
@@ -49,16 +52,56 @@ const SinglePlayerMode = ({ board, boardItems }) => {
     }
   };
 
+  const roomAction = (roomType) => {
+    switch (roomType) {
+      case Tape:
+        //Inc number of tape
+        setNumberOfTape((currentNumberOfTape) => currentNumberOfTape + 1);
+        //Remove tape from board
+        setTimeout(() => {
+          boardItems[selectedId].roomItem = "";
+          board[selectedId].roomItem = "";
+        }, 1000);
+
+        break;
+
+      case Pessimist:
+        //End game loss pessimist
+        setEndGameState({ isEnd: true, type: "lossPessimist" });
+
+        break;
+
+      case Foggy:
+        alert("Foggy");
+
+        break;
+      case Den:
+        //End game win
+        setEndGameState({ isEnd: true, type: "win" });
+        break;
+    }
+  };
   const move = () => {
     if (selectedChoices === questionList[0].correctAnswer) {
       //Move JOUD to the next room
       setCurrentRoomNumber(selectedId);
       //Open room
       board[selectedId].roomItem = boardItems[selectedId].roomItem;
+      //Active room action
+      roomAction(boardItems[selectedId].roomItem);
     } else {
-      //Deduct number of tape
-      setNumberOfTape((currentNumberOfTape) => currentNumberOfTape - 1);
+      if (numberOfTape === 1) {
+        //End game loss tape
+        setEndGameState({ isEnd: true, type: "lossTape" });
+      } else {
+        //Deduct number of tape
+        setNumberOfTape((currentNumberOfTape) => currentNumberOfTape - 1);
+      }
     }
+  };
+
+  const endGame = () => {
+    alert("end game");
   };
 
   const renderItem = ({ item }) => {
@@ -86,6 +129,12 @@ const SinglePlayerMode = ({ board, boardItems }) => {
       move();
     }
   }, [selectedChoices]);
+
+  useEffect(() => {
+    if (endGameState.type !== null && endGameState.isEnd !== false) {
+      endGame();
+    }
+  }, [endGameState]);
 
   return (
     <>
